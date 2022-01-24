@@ -1,0 +1,10 @@
+*.Identifier
+*.db
+*.log
+*.zip
+.DS_Store
+upload
+backup
+.vscode
+*.yml
+workspace.code-workspace
