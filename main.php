@@ -37,6 +37,7 @@ class Dir
             foreach ($paths as $path) {
                 // 拼接完整路径
                 $fullPath = $rootPath . DIRECTORY_SEPARATOR . $path;
+                if(!file_exists($fullPath)) continue;
                 // 如果是目录的话,合并到扫描队列中继续进行扫描
                 if (is_dir($fullPath)) {
                     self::scan($fullPath, $options);
@@ -50,27 +51,54 @@ class Dir
                         continue;
                     }
                 }
-                $req_body = ['file'=> new CURLFILE($fullPath)];
+                $newFullPath = str_replace('.md.', '.', $fullPath);
+                $newFullPath = str_replace('.th.', '.', $newFullPath);
+
+                if (!file_exists($newFullPath)) {
+                    if (!file_exists($backupDir)) {
+                        mkdir($backupDir, 0777, true);
+                    }
+                    $backupPath = $backupDir.'/'.basename($fullPath);
+                    rename($fullPath, $backupPath);
+                    echo $newFullPath.' not found, '.$fullPath.' moved'.PHP_EOL;
+                    continue;
+                }
+
+                $req_body = ['file'=> new CURLFILE($newFullPath)];
                 $modres = self::curl('http://api.moderatecontent.com/moderate/', $req_body, 'POST');
                 $modres = json_decode($modres);
                 if (isset($modres->error_code) && $modres->error_code == 0) {
                     #$predictions = round($modres->predictions->everyone, 6);
                     $rating_label = $modres->rating_label;
-                    echo 'file: '.$fullPath.' => '.$rating_label;
+                    echo 'file: '.$newFullPath.' => '.$rating_label;
                     //if ($predictions > $options['prediction']) {
                     if ($rating_label == 'adult') {
                         if (!file_exists($backupDir)) {
                             mkdir($backupDir, 0777, true);
                         }
-                        $backupPath = $backupDir.'/'.basename($fullPath);
-                        rename($fullPath, $backupPath);
-                        echo ' moved';
+                        $backupPath = $backupDir.'/'.basename($newFullPath);
+                        rename($newFullPath, $backupPath);
+                        echo ' moved'.PHP_EOL;
+                        $newPathInfo = pathinfo($newFullPath);
+                        $md = $newPathInfo['dirname'].'/'.$newPathInfo['filename'].'.md.'.$newPathInfo['extension'];
+                        $th = $newPathInfo['dirname'].'/'.$newPathInfo['filename'].'.th.'.$newPathInfo['extension'];
+                        if (file_exists($md)) {
+                            $mdBackupPath = $backupDir.'/'.basename($md);
+                            rename($md, $mdBackupPath);
+                            echo 'md file: '.$md.' moved'.PHP_EOL;
+                        }
+                        if (file_exists($th)) {
+                            $thBackupPath = $backupDir.'/'.basename($th);
+                            rename($th, $thBackupPath);
+                            echo 'th file: '.$th.' moved'.PHP_EOL;
+                        }
 
+                    } else {
+                        echo PHP_EOL;
                     }
-                    echo PHP_EOL;
 
                 }
-                #array_push(static::$files, $fullPath);
+                #array_push(static::$files, $newFullPath);
             }
         }
 
