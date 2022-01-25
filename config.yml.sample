@@ -2,3 +2,4 @@ dir:
   upload: upload
   backup: backup 
 #prediction: 0.003
+ext: [jpg, jpeg, png, gif]

@@ -138,7 +138,7 @@ $r = Dir::scan($path, [
     'callback' => function ($file) {
         return $file; 
     },
-    'filterExt' => ['jpg', 'jpeg', 'png'],
+    'filterExt' => $config['ext'],
     'prediction' => $config['prediction'] ?? 0.5,
     'rootPath' => $path,
     'backupPath' => realpath($config['dir']['backup'])
