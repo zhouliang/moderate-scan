@@ -54,9 +54,11 @@ class Dir
                 $modres = self::curl('http://api.moderatecontent.com/moderate/', $req_body, 'POST');
                 $modres = json_decode($modres);
                 if (isset($modres->error_code) && $modres->error_code == 0) {
-                    $predictions = round($modres->predictions->everyone, 6);
-                    echo 'file: '.$fullPath.' => '.$predictions;
-                    if ($predictions > $options['prediction']) {
+                    #$predictions = round($modres->predictions->everyone, 6);
+                    $rating_label = $modres->rating_label;
+                    echo 'file: '.$fullPath.' => '.$rating_label;
+                    //if ($predictions > $options['prediction']) {
+                    if ($rating_label == 'adult') {
                         if (!file_exists($backupDir)) {
                             mkdir($backupDir, 0777, true);
                         }
@@ -68,7 +70,7 @@ class Dir
                     echo PHP_EOL;
 
                 }
-                array_push(static::$files, $fullPath);
+                #array_push(static::$files, $fullPath);
             }
         }
 
@@ -113,5 +115,5 @@ $r = Dir::scan($path, [
     'rootPath' => $path,
     'backupPath' => realpath($config['dir']['backup'])
 ]);
-print_r($r);
+#print_r($r);
 

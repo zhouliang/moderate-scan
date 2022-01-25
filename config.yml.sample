@@ -1,4 +1,4 @@
 dir:
   upload: upload
   backup: backup 
-prediction: 0.003
+#prediction: 0.003
